@@ -20,66 +20,95 @@ mongoose.connect("mongodb://localhost:27017/usersdb", {
 });
 
 const db = mongoose.connection;
+const Schema = mongoose.Schema;
 
 db.on("error", () => console.log("Database connection error"));
 db.once("open", () => console.log("Database connected"));
-db.on("end", () => console.log("Database disconnected"));
+db.on("close", () => console.log("Database disconnected"));
+
+const userSchema = new Schema(
+  {
+    ref_no: { type: Number, required: true },
+    first_name: { type: String, required: true },
+    last_name: { type: String, required: true },
+    email: { type: String, required: true },
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+  },
+  { collection: "student" }
+);
+
+const User = mongoose.model("User", userSchema);
 
 exp.post("/signup", (req, res) => {
-  const first_name = req.body.first_name;
-  const last_name = req.body.last_name;
-  const ref_no = req.body.ref_no;
-  const e_mail = req.body.e_mail;
-  const user_name = req.body.user_name;
-  const password = req.body.password;
-  const password_confirmation = req.body.password2;
+  const {
+    ref_no,
+    first_name,
+    last_name,
+    email,
+    username,
+    password: plainPassword,
+    password2,
+  } = req.body;
 
-  if (password_confirmation !== password) {
-    console.log("Password does not match Confirmation Password");
-    return res.send("Passwords do not match!");
+  if (
+    !ref_no ||
+    !first_name ||
+    !email ||
+    !username ||
+    !plainPassword ||
+    !password2
+  ) {
+    return res.json("Please fill in all the fields");
   }
 
-  const user_data = {
-    _id: ref_no,
-    first_name: first_name,
-    last_name: last_name,
-    "e-mail": e_mail,
-    user_name: user_name,
-    password: password,
-  };
+  if (plainPassword !== password2) {
+    return res.json("Password does not match Confirmation Password");
+  }
 
-  db.collection("student").insertOne(user_data, (err, collection) => {
-    if (err) {
-      throw err;
+  if (plainPassword.length < 8) {
+    return res.json("Password too short. Should be at least 8 characters");
+  }
+
+  const password = await bcrypt.hash(plainPassword, 10);
+
+  try {
+    const response = await User.create({
+      ref_no,
+      first_name,
+      last_name,
+      email,
+      username,
+      password,
+    });
+    console.log("User created successfuly: ", response);
+    return res.redirect("user-dashboard.html");
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.json("Username already registered");
     }
-    console.log("Record inserted successfully");
-  });
-
-  return res.redirect("user-dashboard.html");
+    throw error;
+  }
 });
 
 exp
   .get("/login", (req, res) => res.redirect("login.html"))
   .post("/login", async (req, res) => {
-    const user_name = req.body.user_name;
-    const password = req.body.password;
-    const user = await db
-      .collection("student")
-      .findOne({ user_name: user_name, password: password });
+    const { username, password } = req.body;
+    const user = await User.findOne({ username: username });
 
-    // const users = await db.collection("student").find({}).toArray();
+    if (!user) {
+      return res.json("Invalid username!");
+    }
 
-    // console.log(user);
-    // console.log("Username: ", user.user_name);
-    // console.log(users);
-
-    return user === null
-      ? res.send("Invalid username or incorrect password!")
-      : res.redirect("user-dashboard.html");
+    if (await bcrypt.compare(password, user.password)) {
+      return res.redirect("dashboard.html");
+    } else {
+      return res.json("Password is incorrect!");
+    }
   })
   .get("/admin-login", (req, res) => {
     //insert one document into the admin collection
-    //TODO: remove the insertion into the admin collection once its done
     // db.collection("admin").insertOne(
     //   { _id: 1, user_name: "admin", password: "1234" },
     //   (err, collection) => {
@@ -114,6 +143,13 @@ exp
       console.log("Error validating admin!");
     }
   });
+
+exp.post("/logout", async (req, res) => {
+  const logout = req.body;
+  if (logout) {
+    return res.redirect("login.html");
+  }
+});
 
 exp
   .get("/", (req, res) => {
