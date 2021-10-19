@@ -40,7 +40,7 @@ const userSchema = new Schema(
 
 const User = mongoose.model("User", userSchema);
 
-exp.post("/signup", (req, res) => {
+exp.post("/signup", async (req, res) => {
   const {
     ref_no,
     first_name,
