@@ -80,6 +80,13 @@ exp.post('/login', async (req, res) => {
     res.json('Invalid username or password');    
 })
 
+exp.post('/logout', async (req, res) => {
+    const logout = req.body;
+    if (logout){
+        return res.redirect('login.html');
+    }
+})
+
 exp.get('/', (req, res) => {
     res.set({"Allow-access-Allow-Origin" : '*'})
     return res.redirect('signup.html');
