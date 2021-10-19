@@ -97,8 +97,6 @@ exp
     const { username, password } = req.body;
     const user = await User.findOne({ username: username });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     if (!user) {
       return res.json("Invalid username!");
     }
@@ -106,7 +104,6 @@ exp
     if (await bcrypt.compare(password, user.password)) {
       return res.redirect("dashboard.html");
     } else {
-      console.log(hashedPassword, user.password);
       return res.json("Password is incorrect!");
     }
   })
