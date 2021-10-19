@@ -23,7 +23,7 @@ const db = mongoose.connection;
 
 db.on("error", () => console.log("Database connection error"));
 db.once("open", () => console.log("Database connected"));
-db.once("closed", () => console.log("Database disconnected"));
+db.on("end", () => console.log("Database disconnected"));
 
 exp.post("/signup", (req, res) => {
   const first_name = req.body.first_name;
@@ -43,7 +43,7 @@ exp.post("/signup", (req, res) => {
     _id: ref_no,
     first_name: first_name,
     last_name: last_name,
-    "e-mail": e - mail,
+    "e-mail": e_mail,
     user_name: user_name,
     password: password,
   };
@@ -67,7 +67,7 @@ exp
       .collection("student")
       .findOne({ user_name: user_name, password: password });
 
-    const users = await db.collection("student").find({}).toArray();
+    // const users = await db.collection("student").find({}).toArray();
 
     // console.log(user);
     // console.log("Username: ", user.user_name);
