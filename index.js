@@ -14,7 +14,7 @@ exp.use(
   })
 );
 
-mongoose.connect("mongodb://localhost:27017/usersdb", {
+mongoose.connect("mongodb://localhost:27017/studentsdb", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
@@ -35,7 +35,7 @@ const userSchema = new Schema(
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
   },
-  { collection: "student" }
+  { collection: "Student" }
 );
 
 const User = mongoose.model("User", userSchema);
@@ -82,7 +82,7 @@ exp.post("/signup", async (req, res) => {
       password,
     });
     console.log("User created successfuly: ", response);
-    return res.redirect("user-dashboard.html");
+    return res.redirect("login.html");
   } catch (error) {
     if (error.code === 11000) {
       return res.json("Username already registered");
@@ -95,59 +95,62 @@ exp
   .get("/login", (req, res) => res.redirect("login.html"))
   .post("/login", async (req, res) => {
     const { username, password } = req.body;
-    const user = await User.findOne({ username: username });
+    const user = await User.findOne(username);
 
     if (!user) {
-      return res.json("Invalid username!");
+      return res.json("Invalid username or password!");
     }
 
     if (await bcrypt.compare(password, user.password)) {
-      return res.redirect("dashboard.html");
+      return res.redirect("user-dashboard.html");
     } else {
-      return res.json("Password is incorrect!");
-    }
-  })
-  .get("/admin-login", (req, res) => {
-    //insert one document into the admin collection
-    // db.collection("admin").insertOne(
-    //   { _id: 1, user_name: "admin", password: "1234" },
-    //   (err, collection) => {
-    //     if (err) {
-    //       throw err;
-    //     }
-    //     console.log("Admin record successfully added!");
-    //   }
-    // );
-    //Username = admin , Password  = 1234
-
-    return res.redirect("admin-login.html");
-  })
-  .post("/admin-login", async (req, res) => {
-    const user_name = req.body.user_name;
-    const password = req.body.password;
-    try {
-      const admin = await db
-        .collection("admin")
-        .findOne({ user_name: user_name, password: password });
-
-      if (admin === null) {
-        return res.send("Invalid username or incorrect password!");
-      }
-
-      if (user_name === admin.user_name && password === admin.password) {
-        return res.redirect("admin-dashboard.html");
-      } else {
-        return res.send("Invalid username or incorrect password!");
-      }
-    } catch (error) {
-      console.log("Error validating admin!");
+      return res.json("Invalid username or password!");
     }
   });
+
+//insert one doc into the admin collection - comment out after running once
+// const data = { _id: 1, user_name: 'admin', password: '1234' }
+// db.collection('admin').insertOne(data, (err, collection) => {
+//     if (err) {
+//       throw err;
+//     }
+//     console.log('Admin record successfully added!');
+//   });
+// Username = admin , Password  = 1234
+
+exp.post("/admin-login", async (req, res) => {
+  const user_name = req.body.user_name;
+  const password = req.body.password;
+  try {
+    const admin = await db
+      .collection("admin")
+      .findOne({ user_name: user_name, password: password });
+
+    if (admin === null) {
+      return res.send("Invalid username or password!");
+    }
+
+    if (user_name === admin.user_name && password === admin.password) {
+      return res.redirect("admin-dashboard.html");
+    } else {
+      return res.send("Invalid username or password!");
+    }
+  } catch (error) {
+    console.log("Error validating admin!");
+  }
+});
 
 exp.post("/logout", async (req, res) => {
   const logout = req.body;
   if (logout) {
     return res.redirect("login.html");
+  }
+});
+
+exp.post("/admin-logout", async (req, res) => {
+  const admin_logout = req.body;
+  if (admin_logout) {
+    return res.redirect("admin-login.html");
   }
 });
 
