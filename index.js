@@ -92,19 +92,19 @@ exp.post("/signup", async (req, res) => {
 });
 
 exp.post("/login", async (req, res) => {
-    const { username, password } = req.body;
-    const user = await User.findOne({username});
+  const { username, password } = req.body;
+  const user = await User.findOne({ username });
 
-    if (!user) {
-      return res.json("Invalid username or password!");
-    }
+  if (!user) {
+    return res.json("Invalid username or password!");
+  }
 
-    if (await bcrypt.compare(password, user.password)) {
-      return res.redirect("user-dashboard.html");
-    } else {
-      return res.json("Invalid username or password!");
-    }
-  });
+  if (await bcrypt.compare(password, user.password)) {
+    return res.redirect("user-dashboard.html");
+  } else {
+    return res.json("Invalid username or password!");
+  }
+});
 
 //insert one doc into the admin collection - comment out after running once
 // const data = { _id: 1, user_name: 'admin', password: '1234' }
@@ -116,6 +116,7 @@ exp.post("/login", async (req, res) => {
 //   });
 // Username = admin , Password  = 1234
 
+exp.get("/admin-login", (req, res) => res.redirect("admin-login.html"));
 exp.post("/admin-login", async (req, res) => {
   const user_name = req.body.user_name;
   const password = req.body.password;
