@@ -14,7 +14,7 @@ exp.use(
   })
 );
 
-mongoose.connect("mongodb://localhost:27017/studentsdb", {
+mongoose.connect("mongodb://localhost:27017/usersdb", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
@@ -91,11 +91,9 @@ exp.post("/signup", async (req, res) => {
   }
 });
 
-exp
-  .get("/login", (req, res) => res.redirect("login.html"))
-  .post("/login", async (req, res) => {
+exp.post("/login", async (req, res) => {
     const { username, password } = req.body;
-    const user = await User.findOne(username);
+    const user = await User.findOne({username});
 
     if (!user) {
       return res.json("Invalid username or password!");
